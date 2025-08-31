@@ -2,91 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sticker Bundle Creator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Kai Sticker Maker</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="app-header">
-    <h1>Sticker Bundle Creator</h1>
-    <div class="actions">
-      <label class="btn">
-        Upload Images
-        <input type="file" id="fileInput" accept="image/*" multiple hidden />
-      </label>
-
-      <button id="btnAutoArrange" class="btn">Auto Arrange</button>
-
-      <div class="divider"></div>
-
-      <input id="textInput" class="text-input" type="text" placeholder="Add text…" />
-      <select id="fontSelect" class="select">
-        <option value="Inter, system-ui, sans-serif">Inter</option>
-        <option value="Arial, Helvetica, sans-serif">Arial</option>
-        <option value="Georgia, serif">Georgia</option>
-        <option value="Courier New, monospace">Courier New</option>
-        <option value="Impact, Haettenschweiler, sans-serif">Impact</option>
-      </select>
-      <input id="fontSize" class="number" type="number" min="8" max="200" value="36" title="Font size" />
-      <input id="textColor" class="color" type="color" value="#111111" title="Text color" />
-      <button id="btnAddText" class="btn">Add Text</button>
-
-      <div class="divider"></div>
-
-      <label class="inline">
-        Outline
-        <input id="outlineToggle" type="checkbox" checked />
-      </label>
-      <label class="inline">
-        Outline px
-        <input id="outlineSize" type="number" class="number" min="0" max="40" value="12" />
-      </label>
-    </div>
+    <h1>Kai Sticker Maker</h1>
+    <label class="btn upload-btn">
+      <input type="file" id="fileInput" accept="image/*" multiple hidden />
+      Upload
+    </label>
   </header>
 
-  <main class="main">
-    <aside class="panel">
-      <div class="panel-section">
-        <h3>Selected Sticker</h3>
-        <div class="grid">
-          <label>Rotate</label>
-          <input id="rotateDial" type="range" min="-180" max="180" step="1" value="0" />
-          <label>Scale</label>
-          <input id="scaleRange" type="range" min="0.1" max="5" step="0.05" value="1" />
-          <button id="btnDelete" class="btn danger">Delete</button>
-          <button id="btnBringToFront" class="btn">Bring to Front</button>
-          <button id="btnSendToBack" class="btn">Send to Back</button>
-        </div>
-        <p class="hint">Tip: Hover canvas and use your mouse wheel to resize. Press <kbd>Q</kbd>/<kbd>E</kbd> to rotate ±5°.</p>
-      </div>
-
-      <div class="panel-section">
-        <h3>Canvas</h3>
-        <div class="grid">
-          <label>Width (px)</label>
-          <input id="canvasW" type="number" class="number" value="1240" />
-          <label>Height (px)</label>
-          <input id="canvasH" type="number" class="number" value="1754" />
-          <button id="btnResizeCanvas" class="btn">Resize Canvas</button>
-        </div>
-        <p class="hint">Default approximates A4 at screen DPI (not print-exact). For print, use your editor’s “Scale to fit”.</p>
-      </div>
-
-      <div class="panel-section">
-        <h3>Export</h3>
-        <button id="btnDownload" class="btn primary">Download PNG</button>
-        <button id="btnPrint" class="btn">Print</button>
-      </div>
-    </aside>
-
-    <section class="canvas-wrap">
-      <canvas id="board" width="1240" height="1754"></canvas>
-    </section>
+  <main class="canvas-wrap">
+    <canvas id="board" width="800" height="1000"></canvas>
   </main>
 
-  <footer class="footer">
-    <span>Made with HTML5 Canvas & Vanilla JS</span>
-    <span>Drag to move • Wheel to resize • Shift+Wheel for fine steps</span>
+  <footer class="bottom-bar">
+    <button id="btnLayoutGrid" class="bar-btn">Grid</button>
+    <button id="btnLayoutCircle" class="bar-btn">Circle</button>
+    <button id="btnLayoutCollage" class="bar-btn">Collage</button>
+    <button id="btnZoomIn" class="bar-btn">➕</button>
+    <button id="btnZoomOut" class="bar-btn">➖</button>
+    <button id="btnSave" class="bar-btn">💾 Save</button>
+    <button id="btnLoad" class="bar-btn">📂 Load</button>
+    <button id="btnDownload" class="bar-btn">⬇️</button>
+    <button id="btnPrint" class="bar-btn">🖨️</button>
+    <button id="btnShare" class="bar-btn">📤</button>
   </footer>
 
   <script src="script.js"></script>
