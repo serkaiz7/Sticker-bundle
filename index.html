@@ -1,36 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
   <title>Kai Sticker Maker</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
   <header class="app-header">
     <h1>Kai Sticker Maker</h1>
     <label class="btn upload-btn">
-      <input type="file" id="fileInput" accept="image/*" multiple hidden />
+      <input type="file" id="fileInput" accept="image/*" multiple hidden/>
       Upload
     </label>
   </header>
 
   <main class="canvas-wrap">
-    <canvas id="board" width="800" height="1000"></canvas>
+    <canvas id="board" width="794" height="1123"></canvas>
   </main>
 
-  <footer class="bottom-bar">
-    <button id="btnLayoutGrid" class="bar-btn">Grid</button>
-    <button id="btnLayoutCircle" class="bar-btn">Circle</button>
-    <button id="btnLayoutCollage" class="bar-btn">Collage</button>
-    <button id="btnZoomIn" class="bar-btn">➕</button>
-    <button id="btnZoomOut" class="bar-btn">➖</button>
-    <button id="btnSave" class="bar-btn">💾 Save</button>
-    <button id="btnLoad" class="bar-btn">📂 Load</button>
-    <button id="btnDownload" class="bar-btn">⬇️</button>
-    <button id="btnPrint" class="bar-btn">🖨️</button>
-    <button id="btnShare" class="bar-btn">📤</button>
-  </footer>
+  <!-- Floating Action Button (FAB) -->
+  <div class="fab-menu">
+    <button class="fab-main">☰</button>
+    <div class="fab-options">
+      <button id="btnLayoutGrid">Grid</button>
+      <button id="btnLayoutCircle">Circle</button>
+      <button id="btnLayoutCollage">Collage</button>
+      <button id="btnCompressIn">⇤ Compress In</button>
+      <button id="btnCompressOut">⇥ Compress Out</button>
+      <button id="btnZoomIn">➕ Zoom In</button>
+      <button id="btnZoomOut">➖ Zoom Out</button>
+      <button id="btnDownload">⬇️ Download</button>
+      <button id="btnPrint">🖨️ Print</button>
+      <button id="btnShare">🔗 Share</button>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
