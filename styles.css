@@ -3,13 +3,14 @@
   --panel: #161b22;
   --text: #f1f5f9;
   --accent: #3b82f6;
+  --fab-size: 60px;
 }
 
 * { box-sizing: border-box; }
 html, body {
   margin: 0;
   height: 100%;
-  font-family: system-ui, sans-serif;
+  font-family: "Poppins", system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
   display: flex;
@@ -22,57 +23,85 @@ html, body {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: bold;
 }
 
 .upload-btn {
   background: var(--accent);
   color: white;
-  padding: 8px 12px;
+  padding: 8px 14px;
   border-radius: 8px;
   cursor: pointer;
+  transition: 0.3s;
+}
+.upload-btn:hover {
+  background: #2563eb;
 }
 
 .canvas-wrap {
   flex: 1;
   display: flex;
-  align-items: center;
   justify-content: center;
-  overflow: hidden;
+  align-items: center;
+  padding: 8px;
 }
-
 canvas {
   background: white;
-  max-width: 100%;
-  max-height: 100%;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0,0,0,.4);
-  touch-action: none; /* for gestures */
+  box-shadow: 0 6px 18px rgba(0,0,0,.5);
+  border-radius: 4px;
 }
 
-.bottom-bar {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  background: var(--panel);
-  padding: 6px 4px;
-  position: sticky;
-  bottom: 0;
+/* Floating Action Button Menu */
+.fab-menu {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
 }
 
-.bar-btn {
-  flex: 1;
-  margin: 4px;
-  background: #222b36;
+.fab-main {
+  width: var(--fab-size);
+  height: var(--fab-size);
+  border-radius: 50%;
   border: none;
+  background: var(--accent);
   color: white;
-  padding: 12px 6px;
-  font-size: 15px;
-  border-radius: 6px;
+  font-size: 26px;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,.4);
+  transition: transform 0.3s ease;
 }
 
-.bar-btn:active {
-  background: var(--accent);
+.fab-options {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-bottom: 10px;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+
+.fab-options button {
+  margin: 6px 0;
+  padding: 8px 14px;
+  background: var(--panel);
+  color: var(--text);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0,0,0,.3);
+  transform: translateY(10px);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.fab-menu.open .fab-options {
+  opacity: 1;
+  max-height: 1000px;
+}
+.fab-menu.open .fab-options button {
+  opacity: 1;
+  transform: translateY(0);
 }
