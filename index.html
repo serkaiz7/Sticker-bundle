@@ -1,41 +1,921 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
-  <title>Kai Sticker Maker</title>
-  <link rel="stylesheet" href="styles.css"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaiser Sticker Set Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Creative Pastel -->
+    <!-- Application Structure Plan: The application is structured as a guided, multi-step tool. It begins with the 'Prompt Builder,' where users select options from categories defined in the source report (Theme, Style, etc.). Selections dynamically update the 'Generated Prompt' section in real-time. This prompt can then be used in the 'Text-to-Image Generator' or users can switch to the 'Image-to-Image' tool. This task-oriented flow was chosen because it directly mirrors the user's goal: to first construct a creative prompt and then immediately use it, providing an intuitive and efficient workflow from concept to generation. -->
+    <!-- Visualization & Content Choices: Report Info: Themes, Art Styles, Subjects, Palettes -> Goal: Allow user selection to build a text prompt -> Viz/Presentation Method: Interactive button groups within card-based sections (HTML/Tailwind) -> Interaction: On-click selection updates a central state object, which triggers a function to regenerate and display the final text prompt and pre-fill the generator input. Justification: Buttons are more visual and direct than dropdowns for this creative task. Real-time prompt updates provide immediate feedback, making the creation process transparent and engaging. Library/Method: Vanilla JavaScript for state and DOM manipulation. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .option-btn, .special-toggle-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .option-btn.selected, .special-toggle-btn.selected {
+            transform: scale(1.05);
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ff8fab;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        .dark .loader {
+            border-top-color: #f472b6;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Hide default checkbox */
+        .custom-radio input {
+            display: none;
+        }
+        /* Style the custom checkbox */
+        .custom-radio span {
+            height: 20px;
+            width: 20px;
+            border-radius: 9999px;
+            border: 2px solid #f0e2de;
+            display: inline-block;
+            position: relative;
+        }
+        .dark .custom-radio span {
+            border-color: #4b5563;
+        }
+        /* Style the checkmark */
+        .custom-radio input:checked + span::after {
+            content: '';
+            height: 10px;
+            width: 10px;
+            background-color: white;
+            border-radius: 9999px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        /* Change background on check */
+        .custom-radio input:checked + span {
+            background-color: #ff8fab;
+            border-color: #ff8fab;
+        }
+        .dark .custom-radio input:checked + span {
+            background-color: #db2777;
+            border-color: #db2777;
+        }
+        input[name="sheet-count"]:checked + span {
+            background-color: #ff8fab;
+            color: white;
+            border-color: #ff8fab;
+            transform: scale(1.05);
+        }
+        .dark input[name="sheet-count"]:checked + span {
+            background-color: #db2777;
+            border-color: #db2777;
+        }
+        .sheet-count-btn {
+            transition: all 0.2s ease-in-out;
+        }
+         /* Toggle Switch */
+        .toggle-bg:after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            background-color: white;
+            border-radius: 9999px;
+            height: 1.25rem; /* 20px */
+            width: 1.25rem;  /* 20px */
+            transition: transform 0.3s ease-in-out;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        input:checked + .toggle-bg:after {
+            transform: translateX(20px);
+        }
+        input:checked + .toggle-bg {
+            background-color: #ff8fab;
+            border-color: #ff8fab;
+        }
+        .dark input:checked + .toggle-bg {
+             background-color: #db2777;
+             border-color: #db2777;
+        }
+    </style>
 </head>
-<body>
-  <header class="app-header">
-    <h1>Kai Sticker Maker</h1>
-    <label class="btn upload-btn">
-      <input type="file" id="fileInput" accept="image/*" multiple hidden/>
-      Upload
-    </label>
-  </header>
+<body class="bg-[#fdf7f5] text-gray-800 dark:bg-gray-900 dark:text-gray-200">
 
-  <main class="canvas-wrap">
-    <canvas id="board" width="794" height="1123"></canvas>
-  </main>
+    <div class="container mx-auto px-4 py-8 md:py-12">
+        <header class="relative text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-white">Kaiser Sticker Set Generator</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-400 mt-2">Craft the perfect prompt and generate your own unique sticker sheets.</p>
+            <button id="theme-toggle" class="absolute top-0 right-0 p-2 rounded-full text-xl hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                <span id="theme-icon-light">🌙</span>
+                <span id="theme-icon-dark" class="hidden">☀️</span>
+            </button>
+        </header>
 
-  <!-- Floating Action Button (FAB) -->
-  <div class="fab-menu">
-    <button class="fab-main">☰</button>
-    <div class="fab-options">
-      <button id="btnLayoutGrid">Grid</button>
-      <button id="btnLayoutCircle">Circle</button>
-      <button id="btnLayoutCollage">Collage</button>
-      <button id="btnCompressIn">⇤ Compress In</button>
-      <button id="btnCompressOut">⇥ Compress Out</button>
-      <button id="btnZoomIn">➕ Zoom In</button>
-      <button id="btnZoomOut">➖ Zoom Out</button>
-      <button id="btnDownload">⬇️ Download</button>
-      <button id="btnPrint">🖨️ Print</button>
-      <button id="btnShare">🔗 Share</button>
-    </div>
-  </div>
+        <main>
+            <!-- Prompt Builder Section -->
+            <section id="prompt-builder" class="mb-12">
+                <h2 class="text-2xl font-bold mb-2 text-center dark:text-gray-100">1. Prompt Builder</h2>
+                <p class="text-center text-gray-500 dark:text-gray-400 mb-8">Select options below or switch to a Special Request.</p>
 
-  <script src="script.js"></script>
+                <div id="regular-options-container" class="space-y-8 transition-opacity duration-300">
+                    <!-- Theme Selection -->
+                    <div class="option-card bg-white dark:bg-gray-800">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">🌸 Theme</h3>
+                        <div id="theme-options" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="theme" data-value="Pink Aesthetic">Pink Aesthetic</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="theme" data-value="Blue Aesthetic">Blue Aesthetic</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="theme" data-value="Yellow Aesthetic">Yellow Aesthetic</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="theme" data-value="Summer Beach Vibes">Summer Vibes</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="theme" data-value="90s Y2K Retro">90s Retro</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="theme" data-value="Kawaii & Cute">Kawaii & Cute</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="theme" data-value="Boho & Nature">Boho & Nature</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="theme" data-value="Artsy & Indie">Artsy & Indie</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="theme" data-value="Mystic & Celestial">Mystic & Celestial</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="theme" data-value="Typography Focus">Typography</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="theme" data-value="Gamer & Geeky">Gamer & Geeky</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="theme" data-value="Spooky & Halloween">Spooky Halloween</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="theme" data-value="Happy Teachers' Day">Teachers' Day</button>
+                        </div>
+                    </div>
+
+                    <!-- Art Style Selection -->
+                    <div class="option-card bg-white dark:bg-gray-800">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">🎨 Art Style</h3>
+                        <div id="style-options" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="style" data-value="Vector Illustration">Vector Illustration</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="style" data-value="Cartoon & Doodle">Cartoon & Doodle</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="style" data-value="Watercolor">Watercolor</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="style" data-value="Embroidered Patch">Embroidered Patch</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="style" data-value="Glitter & Holographic">Glitter & Holographic</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="style" data-value="Pixel Art">Pixel Art</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="style" data-value="Chibi Style">Chibi Style</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="style" data-value="Clean Line Art">Line Art</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="style" data-value="3D Rendered">3D Rendered</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="style" data-value="Claymation Style">Claymation</button>
+                        </div>
+                    </div>
+                     <!-- Subject Selection -->
+                    <div class="option-card bg-white dark:bg-gray-800">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">🧸 Subjects & Objects</h3>
+                        <div id="subject-options" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                           <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Cute Animals like a panda, cat, butterfly, sloth, and corgi dog">Cute Animals</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Food & Drink with Faces like a happy pineapple, dripping pizza, smiling coffee cup, and a cheerful taco">Food & Drink</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Artsy objects like 'The Great Wave' painting, flowers in mason jars, a Greek statue, and paint palettes">Artsy</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Nature objects like flowers, rainbows, stars, potted succulents, and mushrooms">Nature Objects</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Retro Tech like a record player, a boombox, a classic cassette tape, and a rotary phone">Retro Tech</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Fashion & Beauty items like lipstick, sunglasses, sneakers, and nail polish bottles">Fashion & Beauty</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Social Media Logos like YouTube, Netflix, TikTok, and the Facebook thumbs up">Social Media</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Famous Cartoon Characters like SpongeBob, Doraemon, a happy sun from 'Radiate Positivity', and characters from Adventure Time">Cartoons</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Iconic Brand Symbols like Coca-Cola, Starbucks, the Superman logo, and the NASA logo">Brand Logos</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Classic Anime like characters from Dragon Ball, Ghost Fighter, Slam Dunk, Naruto, and One Piece">Classic Anime</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Gamer Gear like controllers, headsets, dice, potions, and pixelated hearts">Gamer Gear</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Spooky things like ghosts, pumpkins, friendly bats, cute skeletons, and witch hats">Spooky Things</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="school supplies like books, apples, pencils, blackboards, and 'World's Best Teacher' medals">Teachers' Day Items</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Mythical Creatures from around the world like the Filipino Bakunawa, Japanese Kitsune, Greek Griffin, and the Chinese Dragon">Mythical Creatures</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Popular Characters like Pikachu from Pokémon, Hello Kitty, and My Melody">Popular Characters</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Studio Ghibli characters like Totoro, Catbus, No-Face from Spirited Away, and Calcifer from Howl's Moving Castle">Studio Ghibli</button>
+                        </div>
+                    </div>
+                    <!-- Color Palette Selection -->
+                    <div class="option-card bg-white dark:bg-gray-800" id="color-palette-card">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">🌈 Color Palette</h3>
+                        <div id="color-options" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="color" data-value="Pastel Pinks & Peaches">Pastel Pinks</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="color" data-value="Vibrant Retro">Vibrant Retro</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="color" data-value="Earthy Tones">Earthy Tones</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="color" data-value="Neon Glow">Neon Glow</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="color" data-value="Monochromatic">Monochromatic</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="color" data-value="Dark & Moody">Dark & Moody</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="color" data-value="Cool Ocean Blues">Ocean Blues</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="color" data-value="Warm Autumn Harvest">Autumn Harvest</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="color" data-value="Synthwave Sunset">Synthwave Sunset</button>
+                        </div>
+                    </div>
+                    <!-- Output Options -->
+                    <div class="option-card bg-white dark:bg-gray-800">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">⚙️ Output Options</h3>
+                        <div class="flex items-center justify-between pb-6 border-b border-gray-200 dark:border-gray-700">
+                            <label for="no-text-toggle" class="flex flex-col cursor-pointer pr-4">
+                                <span class="font-medium text-gray-700 dark:text-gray-300">Image-Only Stickers</span>
+                                <span class="text-sm text-gray-500 dark:text-gray-400">Generates 12 text-free stickers with extra spacing.</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer">
+                                <div class="relative">
+                                    <input type="checkbox" id="no-text-toggle" class="sr-only">
+                                    <div class="toggle-bg bg-gray-200 dark:bg-gray-700 border-2 border-transparent h-6 w-11 rounded-full transition-colors duration-300 ease-in-out"></div>
+                                </div>
+                            </label>
+                        </div>
+                         <!-- Number of Sheets Selection -->
+                        <div class="flex items-center justify-between pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+                            <label class="flex flex-col pr-4">
+                                <span class="font-medium text-gray-700 dark:text-gray-300">Number of Sheets</span>
+                                <span class="text-sm text-gray-500 dark:text-gray-400">Choose how many variations to generate.</span>
+                            </label>
+                            <div id="sheet-count-selection" class="flex items-center space-x-2">
+                                <label>
+                                    <input type="radio" name="sheet-count" value="1" class="sr-only" checked>
+                                    <span class="sheet-count-btn cursor-pointer p-2 px-4 rounded-lg border border-[#f0e2de] dark:border-gray-700 font-medium">1</span>
+                                </label>
+                                <label>
+                                    <input type="radio" name="sheet-count" value="2" class="sr-only">
+                                    <span class="sheet-count-btn cursor-pointer p-2 px-4 rounded-lg border border-[#f0e2de] dark:border-gray-700 font-medium">2</span>
+                                </label>
+                                <label>
+                                    <input type="radio" name="sheet-count" value="4" class="sr-only">
+                                    <span class="sheet-count-btn cursor-pointer p-2 px-4 rounded-lg border border-[#f0e2de] dark:border-gray-700 font-medium">4</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                 <!-- Special Requests -->
+                <div class="mt-8">
+                    <div class="option-card bg-white dark:bg-gray-800">
+                        <button id="special-request-toggle" class="w-full text-left">
+                            <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-200">⭐ Special Request: Anime Motorcycle Decal</h3>
+                             <p class="text-sm text-gray-500 dark:text-gray-400">Click to activate and customize a high-octane anime sticker.</p>
+                        </button>
+
+                        <div id="special-request-panel" class="hidden mt-6 space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 class="font-semibold mb-3">Select a Character</h4>
+                                    <div id="character-selection" class="grid grid-cols-2 sm:grid-cols-2 gap-3">
+                                        <label class="flex items-center space-x-2 cursor-pointer custom-radio">
+                                            <input type="radio" name="character-select" data-character-key="sakamoto" value="Sakamoto from 'Sakamoto Days'"><span></span>Sakamoto
+                                        </label>
+                                        <label class="flex items-center space-x-2 cursor-pointer custom-radio">
+                                            <input type="radio" name="character-select" data-character-key="saitama" value="Saitama from 'One-Punch Man'"><span></span>Saitama
+                                        </label>
+                                        <label class="flex items-center space-x-2 cursor-pointer custom-radio">
+                                            <input type="radio" name="character-select" data-character-key="anya" value="Anya Forger from 'Spy x Family'"><span></span>Anya
+                                        </label>
+                                        <label class="flex items-center space-x-2 cursor-pointer custom-radio">
+                                            <input type="radio" name="character-select" data-character-key="denji" value="Denji from 'Chainsaw Man'"><span></span>Denji
+                                        </label>
+                                        <label class="flex items-center space-x-2 cursor-pointer custom-radio">
+                                            <input type="radio" name="character-select" data-character-key="yuji" value="Yuji Itadori from 'Jujutsu Kaisen'"><span></span>Yuji Itadori
+                                        </label>
+                                         <label class="flex items-center space-x-2 cursor-pointer custom-radio">
+                                            <input type="radio" name="character-select" data-character-key="jinwoo" value="Sung Jinwoo from 'Solo Leveling'"><span></span>Sung Jinwoo
+                                        </label>
+                                        <label class="flex items-center space-x-2 cursor-pointer custom-radio">
+                                            <input type="radio" name="character-select" data-character-key="frieren" value="Frieren from 'Frieren: Beyond Journey's End'"><span></span>Frieren
+                                        </label>
+                                        <label class="flex items-center space-x-2 cursor-pointer custom-radio">
+                                            <input type="radio" name="character-select" data-character-key="deku" value="Deku from 'My Hero Academia'"><span></span>Deku
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold mb-3">Decal Title (Optional)</h4>
+                                    <input type="text" id="decal-title" placeholder="e.g., Anime Legends" class="w-full p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-[#ff8fab] focus:border-transparent">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div>
+                                     <h4 class="font-semibold mb-3">Choose Two Colors</h4>
+                                     <div class="flex items-center gap-4">
+                                         <input type="color" id="color-one" value="#000000" class="w-12 h-12 rounded border-none cursor-pointer">
+                                         <input type="color" id="color-two" value="#FFFFFF" class="w-12 h-12 rounded border-none cursor-pointer">
+                                     </div>
+                                </div>
+                                <div>
+                                     <h4 class="font-semibold mb-3">Randomize Scene & Action</h4>
+                                     <div class="flex items-center gap-4">
+                                        <button id="dice-roll" class="text-4xl p-2 hover:bg-black/10 dark:hover:bg-white/10 rounded-full">🎲</button>
+                                        <p id="scene-action-text" class="text-sm text-gray-600 dark:text-gray-400 italic"></p>
+                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Generated Prompt Section -->
+            <section id="prompt-output" class="mb-12">
+                <h2 class="text-2xl font-bold mb-4 text-center dark:text-gray-100">2. Your Generated Prompt</h2>
+                 <div class="option-card bg-white dark:bg-gray-800">
+                    <textarea id="generatedPrompt" rows="5" class="w-full p-4 rounded-md text-gray-700 bg-[#fff0f3] dark:bg-gray-700 dark:text-gray-200 border-l-4 border-[#ff8fab] dark:border-pink-500 min-h-[120px] text-center italic focus:ring-2 focus:ring-[#ff8fab] dark:focus:ring-pink-500 focus:border-transparent resize-y" placeholder="Your prompt will appear here once you make selections..."></textarea>
+                    <div class="flex justify-center mt-4">
+                        <button id="copy-btn" class="bg-[#ff8fab] dark:bg-pink-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-[#fb7299] dark:hover:bg-pink-700 transition duration-300 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>
+                            Copy Prompt
+                        </button>
+                    </div>
+                 </div>
+            </section>
+
+             <!-- Generator Tabs -->
+            <div class="mb-8 flex justify-center border-b border-gray-200 dark:border-gray-700">
+                <button id="tab-text2image" class="py-4 px-6 block hover:text-[#ff8fab] dark:hover:text-pink-400 focus:outline-none text-[#ff8fab] dark:text-pink-400 border-b-2 font-medium border-[#ff8fab] dark:border-pink-400">Text-to-Image</button>
+                <button id="tab-image2image" class="py-4 px-6 block hover:text-[#ff8fab] dark:hover:text-pink-400 focus:outline-none text-gray-500 dark:text-gray-400 font-medium">Image-to-Image</button>
+            </div>
+
+            <!-- Text-to-Image Generator -->
+            <section id="text-to-image-generator">
+                 <div class="option-card text-center bg-white dark:bg-gray-800">
+                    <h2 class="text-2xl font-bold mb-2 dark:text-gray-100">3. Text-to-Image Generator</h2>
+                    <p class="text-gray-500 dark:text-gray-400 mb-6">Use your prompt to generate a sticker sheet!</p>
+                    <div class="max-w-2xl mx-auto">
+                        <textarea id="text-prompt-input" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff8fab] focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-pink-500" placeholder="Your prompt will be automatically placed here."></textarea>
+                        <button id="generate-text-btn" class="mt-4 w-full bg-[#ff8fab] dark:bg-pink-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-[#fb7299] dark:hover:bg-pink-700 transition duration-300 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>
+                            Generate Sticker Sheet
+                        </button>
+                    </div>
+                    <div id="text-image-output" class="mt-8 min-h-[300px] bg-gray-50 dark:bg-gray-900/50 rounded-lg flex items-center justify-center border border-dashed dark:border-gray-700">
+                        <p class="text-gray-400 dark:text-gray-500">Your generated image will appear here.</p>
+                    </div>
+                 </div>
+            </section>
+
+            <!-- Image-to-Image Generator -->
+            <section id="image-to-image-generator" class="hidden">
+                 <div class="option-card text-center bg-white dark:bg-gray-800">
+                    <h2 class="text-2xl font-bold mb-2 dark:text-gray-100">3. Image-to-Image Sticker Maker</h2>
+                    <p class="text-gray-500 dark:text-gray-400 mb-6">Upload an image and turn it into a sticker!</p>
+                    <div class="max-w-2xl mx-auto">
+                        <input type="file" id="image-upload-input" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#fff0f3] file:text-[#ff8fab] hover:file:bg-[#fbebeb] dark:file:bg-gray-700 dark:file:text-pink-400 dark:hover:file:bg-gray-600">
+                        <p id="image-to-image-helper-text" class="text-sm text-gray-500 dark:text-gray-400 mt-2">Select a Theme and Art Style from the options above to apply to your sticker.</p>
+                        <button id="generate-image-btn" class="mt-4 w-full bg-[#ff8fab] dark:bg-pink-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-[#fb7299] dark:hover:bg-pink-700 transition duration-300 disabled:bg-gray-300 dark:disabled:bg-gray-600" disabled>
+                            Generate Sticker from Image
+                        </button>
+                    </div>
+                    <div id="image-image-output" class="mt-8 min-h-[300px] bg-gray-50 dark:bg-gray-900/50 rounded-lg flex items-center justify-center border border-dashed dark:border-gray-700">
+                         <p class="text-gray-400 dark:text-gray-500">Your generated sticker will appear here.</p>
+                    </div>
+                    <div id="image-download-options" class="hidden mt-4 flex justify-center gap-4">
+                        <button data-format="png" class="download-btn bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition duration-300">Download PNG</button>
+                <button data-format="jpg" class="download-btn bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition duration-300">Download JPG</button>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const state = {
+            theme: null,
+            style: null,
+            subject: null,
+            color: null,
+            noTextAndSpaced: false,
+            sheetCount: 1,
+            special: {
+                active: false,
+                character: null,
+                characterKey: null,
+                title: '',
+                colors: {
+                    one: '#000000',
+                    two: '#FFFFFF'
+                },
+                scene: '',
+            },
+        };
+            
+        const characterActions = {
+            sakamoto: ["calmly deflecting bullets with a pen", "in a dynamic pose, using a broom for combat", "adjusting his glasses with a cool expression amidst chaos", "in a slick dodging maneuver, appearing as a blur", "balancing perfectly on an unusual object"],
+            saitama: ["unleashing a 'Serious Punch' that obliterates the background", "with his iconic blank 'OK' face, holding a grocery bag", "in a simple, heroic pose with his cape flowing dramatically", "flicking a pebble with immense force", "casually defeating a massive monster with one punch"],
+            anya: ["with her iconic 'Heh' smug expression, hands on hips", "gas-mask-wearing face while looking determined", "looking shocked with wide eyes as she reads minds, with psychic sparks", "hugging her penguin plushie tightly", "riding on the back of her dog, Bond, with a joyful look"],
+            denji: ["in a visceral pose with chainsaws revved and ready", "leaping forward aggressively, covered in blood splatters", "in a wild, feral stance, ready to attack", "in a rare calm moment, eating toast with Pochita", "revving the chainsaw on his head with a manic grin"],
+            yuji: ["channeling cursed energy for a 'Divergent Fist' punch", "in a fluid martial arts stance, preparing for 'Black Flash'", "with the marks of Sukuna appearing on his face, a sinister smile", "leaping between buildings with athletic grace", "parrying an attack with cursed energy-infused fists"],
+            jinwoo: ["standing menacingly with glowing purple eyes, as shadow soldiers rise from the ground", "dashing forward with two glowing daggers, leaving a shadow trail", "commanding his shadow army, with Igris and Beru at his side", "in a quiet moment, leveling up with a blue glow", "using 'Ruler's Authority' to telekinetically float objects"],
+            frieren: ["elegantly casting a powerful magic spell, with complex runes glowing around her", "sitting peacefully in a field of flowers, a calm, nostalgic expression on her face", "looking melancholically at a monument from the past", "opening a grimoire as magical energy pours out", "in combat, effortlessly creating magical barriers"],
+            deku: ["powering up 'One For All' with green lightning crackling around his body", "launching a powerful 'Delaware Smash' air-blast", "in a heroic mid-air kicking pose using 'Shoot Style'", "unleashing his 'Blackwhip' tendrils in a dynamic arc", "in a focused stance, preparing a 'St. Louis Smash'"]
+        };
+
+        const generatedPromptEl = document.getElementById('generatedPrompt');
+        const copyBtn = document.getElementById('copy-btn');
+        const textPromptInput = document.getElementById('text-prompt-input');
+        const generateTextBtn = document.getElementById('generate-text-btn');
+        
+        const tabText2Image = document.getElementById('tab-text2image');
+        const tabImage2Image = document.getElementById('tab-image2image');
+        const textToImageGenerator = document.getElementById('text-to-image-generator');
+        const imageToImageGenerator = document.getElementById('image-to-image-generator');
+
+        const imageUploadInput = document.getElementById('image-upload-input');
+        const generateImageBtn = document.getElementById('generate-image-btn');
+        const imageToImageHelperText = document.getElementById('image-to-image-helper-text');
+        const noTextToggle = document.getElementById('no-text-toggle');
+        const sheetCountSelection = document.getElementById('sheet-count-selection');
+
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIconLight = document.getElementById('theme-icon-light');
+        const themeIconDark = document.getElementById('theme-icon-dark');
+        
+        const specialRequestToggle = document.getElementById('special-request-toggle');
+        const specialRequestPanel = document.getElementById('special-request-panel');
+        const regularOptionsContainer = document.getElementById('regular-options-container');
+
+        const characterSelection = document.getElementById('character-selection');
+        const decalTitleInput = document.getElementById('decal-title');
+        const colorOneInput = document.getElementById('color-one');
+        const colorTwoInput = document.getElementById('color-two');
+        const diceRollBtn = document.getElementById('dice-roll');
+        const sceneActionText = document.getElementById('scene-action-text');
+
+
+        // Theme handling
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                themeIconLight.classList.add('hidden');
+                themeIconDark.classList.remove('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeIconLight.classList.remove('hidden');
+                themeIconDark.classList.add('hidden');
+            }
+        };
+
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.contains('dark');
+            const newTheme = isDark ? 'light' : 'dark';
+            localStorage.setItem('theme', newTheme);
+            applyTheme(newTheme);
+        });
+
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme) applyTheme(savedTheme);
+        else if (prefersDark) applyTheme('dark');
+        else applyTheme('light');
+
+
+        function updateImageBtnState() {
+            const fileIsUploaded = imageUploadInput.files.length > 0;
+            const regularOptionsValid = state.theme && state.style && state.subject && state.color && !state.special.active;
+            const specialOptionsValid = state.special.active && state.special.character;
+            generateImageBtn.disabled = !(fileIsUploaded && (regularOptionsValid || specialOptionsValid));
+        }
+
+        function updatePrompt() {
+            let prompt = '';
+            if (state.special.active) {
+                if (state.special.character) {
+                    let titleClause = '';
+                    const characterName = state.special.character.split(' from ')[0];
+                    
+                    if (state.special.title) {
+                        titleClause = `The title "${state.special.title}" is a central graphic element, with the character interacting with the letters.`;
+                    }
+                    
+                    prompt = `A wide anime-style motorcycle sticker design featuring ${characterName} ${state.special.scene}. The artwork MUST prominently feature text. ${titleClause} The character's name (${characterName}) is written in a stylized, fluid font that merges with the action's tail effects and energy trails. The art style is bold and graphic, using a stark binary color palette of ${state.special.colors.one} and ${state.special.colors.two}. The entire canvas is filled with dynamic motion lines and stylized debris. Focus on powerful movements. Every element has a thick die-cut border.`;
+
+                } else {
+                    prompt = ''; 
+                }
+            } else if (state.theme && state.style && state.subject && state.color) {
+                 if (state.noTextAndSpaced) {
+                    prompt = `A high-resolution sticker sheet featuring exactly 12 separate sticker designs. Theme: ${state.theme}. Art Style: ${state.style}. Subjects: ${state.subject}. Each sticker is a distinct, self-contained design with a thick white die-cut border. **Crucially, the 12 stickers MUST be arranged on a simple white background with significant extra empty space between each one to ensure they are well-separated.** The entire image uses a cohesive ${state.color} color scheme. **There must be absolutely NO text or letters on the stickers or in the image.**`;
+                 } else {
+                    let countText;
+                    if (state.sheetCount == 1) {
+                        countText = "a single, detailed sticker design";
+                    } else {
+                        countText = `a sticker sheet featuring exactly ${state.sheetCount} separate sticker designs`;
+                    }
+                    prompt = `A high-resolution ${countText} for easy cutting. Theme: ${state.theme}. Art Style: ${state.style}. Subjects: ${state.subject}. Each sticker is a distinct, self-contained design with a thick white die-cut border. **Crucially, the stickers MUST be arranged on a simple white background with significant empty space between each one.** The entire image uses a cohesive ${state.color} color scheme. The image must feature text: stylish labels are integrated into each individual sticker design, interacting with the subjects (e.g., a cat playing with the letters "CAT").`;
+                 }
+            }
+
+            if (prompt) {
+                generatedPromptEl.value = prompt;
+                generatedPromptEl.classList.remove('italic');
+                textPromptInput.value = prompt;
+                copyBtn.disabled = false;
+                generateTextBtn.disabled = false;
+            } else {
+                let placeholder = 'Your prompt will appear here once you make selections...';
+                if (state.special.active) {
+                     if (!state.special.character) placeholder = 'Please select a character.';
+                }
+                generatedPromptEl.value = '';
+                generatedPromptEl.placeholder = placeholder;
+                generatedPromptEl.classList.add('italic');
+                textPromptInput.value = '';
+                copyBtn.disabled = true;
+                generateTextBtn.disabled = true;
+            }
+            updateImageBtnState();
+        }
+        
+        generatedPromptEl.addEventListener('input', (e) => {
+            const newPrompt = e.target.value;
+            textPromptInput.value = newPrompt;
+            const isDisabled = !newPrompt.trim();
+            copyBtn.disabled = isDisabled;
+            generateTextBtn.disabled = isDisabled;
+        });
+
+        document.getElementById('prompt-builder').addEventListener('click', (e) => {
+            const button = e.target.closest('.option-btn');
+            if (!button) return;
+
+            const category = button.dataset.category;
+            const value = button.dataset.value;
+
+            if (state.hasOwnProperty(category)) {
+                 state[category] = value;
+            }
+            
+            document.querySelectorAll(`button[data-category="${category}"]`).forEach(btn => {
+                btn.classList.remove('selected', 'bg-[#ff8fab]', 'text-white', 'border-[#ff8fab]', 'dark:bg-pink-600', 'dark:border-pink-600');
+            });
+            button.classList.add('selected', 'bg-[#ff8fab]', 'text-white', 'border-[#ff8fab]', 'dark:bg-pink-600', 'dark:border-pink-600');
+
+            updatePrompt();
+        });
+        
+        specialRequestToggle.addEventListener('click', () => {
+            state.special.active = !state.special.active;
+            if(state.special.active) {
+                specialRequestPanel.classList.remove('hidden');
+                regularOptionsContainer.classList.add('opacity-40', 'pointer-events-none');
+                imageToImageHelperText.textContent = 'The active Special Request settings will be applied to your uploaded image.';
+                state.theme = null;
+                state.style = null;
+                state.subject = null;
+                state.color = null;
+                document.querySelectorAll('#regular-options-container .option-btn').forEach(btn => {
+                    btn.classList.remove('selected', 'bg-[#ff8fab]', 'text-white', 'border-[#ff8fab]', 'dark:bg-pink-600', 'dark:border-pink-600');
+                });
+                rollDice(); 
+            } else {
+                specialRequestPanel.classList.add('hidden');
+                regularOptionsContainer.classList.remove('opacity-40', 'pointer-events-none');
+                imageToImageHelperText.textContent = 'Select a Theme and Art Style from the options above to apply to your sticker.';
+                // Reset sheet count to 1 when toggling off
+                document.querySelector('input[name="sheet-count"][value="1"]').checked = true;
+                state.sheetCount = 1;
+            }
+            updatePrompt();
+        });
+        
+        noTextToggle.addEventListener('change', (e) => {
+            state.noTextAndSpaced = e.target.checked;
+            updatePrompt();
+        });
+
+        sheetCountSelection.addEventListener('change', (e) => {
+            if (e.target.name === 'sheet-count') {
+                state.sheetCount = parseInt(e.target.value, 10);
+            }
+        });
+
+        function rollDice() {
+            const characterKey = state.special.characterKey;
+            let possibleActions = [];
+
+            if (characterKey && characterActions[characterKey]) {
+                possibleActions = characterActions[characterKey];
+            } else {
+                 Object.values(characterActions).forEach(actions => possibleActions.push(...actions));
+            }
+            
+            if (possibleActions.length === 0) { 
+                 state.special.scene = "in a dynamic action pose";
+            } else {
+                const randomIndex = Math.floor(Math.random() * possibleActions.length);
+                state.special.scene = possibleActions[randomIndex];
+            }
+
+            sceneActionText.textContent = state.special.scene;
+            updatePrompt();
+        }
+
+        diceRollBtn.addEventListener('click', rollDice);
+
+        characterSelection.addEventListener('change', (e) => {
+            const selectedRadio = e.target;
+            state.special.character = selectedRadio.value;
+            state.special.characterKey = selectedRadio.dataset.characterKey;
+            rollDice(); 
+            updatePrompt();
+        });
+
+        decalTitleInput.addEventListener('input', (e) => {
+            state.special.title = e.target.value.trim();
+            updatePrompt();
+        });
+
+        colorOneInput.addEventListener('input', (e) => { state.special.colors.one = e.target.value; updatePrompt(); });
+        colorTwoInput.addEventListener('input', (e) => { state.special.colors.two = e.target.value; updatePrompt(); });
+        
+        copyBtn.addEventListener('click', () => {
+            generatedPromptEl.select();
+            try {
+                document.execCommand('copy');
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => { copyBtn.textContent = 'Copy Prompt'; }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+        });
+        
+        tabText2Image.addEventListener('click', () => {
+            textToImageGenerator.classList.remove('hidden');
+            imageToImageGenerator.classList.add('hidden');
+            tabText2Image.classList.add('text-[#ff8fab]', 'border-[#ff8fab]', 'dark:text-pink-400', 'dark:border-pink-400');
+            tabText2Image.classList.remove('text-gray-500', 'dark:text-gray-400');
+            tabImage2Image.classList.add('text-gray-500', 'dark:text-gray-400');
+            tabImage2Image.classList.remove('text-[#ff8fab]', 'border-[#ff8fab]', 'dark:text-pink-400', 'dark:border-pink-400');
+        });
+
+        tabImage2Image.addEventListener('click', () => {
+            textToImageGenerator.classList.add('hidden');
+            imageToImageGenerator.classList.remove('hidden');
+            tabImage2Image.classList.add('text-[#ff8fab]', 'border-[#ff8fab]', 'dark:text-pink-400', 'dark:border-pink-400');
+            tabImage2Image.classList.remove('text-gray-500', 'dark:text-gray-400');
+            tabText2Image.classList.add('text-gray-500', 'dark:text-gray-400');
+            tabText2Image.classList.remove('text-[#ff8fab]', 'border-[#ff8fab]', 'dark:text-pink-400', 'dark:border-pink-400');
+        });
+        
+        imageUploadInput.addEventListener('change', () => {
+            updateImageBtnState();
+        });
+        
+        function hideDownloadOptions(containerId) {
+            const container = document.getElementById(containerId);
+            const downloadContainer = container.nextElementSibling;
+            if(downloadContainer && downloadContainer.id.includes('-download-options')) {
+                downloadContainer.classList.add('hidden');
+            }
+        }
+
+        function showLoaders(containerId, count) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = ''; // Clear previous content
+            container.className = 'mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[300px]'; // Ensure grid styles
+            for (let i = 0; i < count; i++) {
+                const loaderWrapper = document.createElement('div');
+                loaderWrapper.id = `loader-wrapper-${i}`;
+                loaderWrapper.className = 'bg-gray-50 dark:bg-gray-900/50 rounded-lg flex items-center justify-center border border-dashed dark:border-gray-700 min-h-[300px]';
+                loaderWrapper.innerHTML = '<div class="loader mx-auto"></div>';
+                container.appendChild(loaderWrapper);
+            }
+        }
+        
+        function displayImageInSlot(containerId, slotIndex, imageUrl, prompt, title = '') {
+            const slotId = `loader-wrapper-${slotIndex}`;
+            const slot = document.getElementById(slotId);
+            if (!slot) return;
+            
+            slot.innerHTML = `
+                <div class="p-2">
+                    <img src="${imageUrl}" alt="Generated Sticker based on: ${prompt}" class="max-w-full max-h-[400px] h-auto rounded-lg shadow-md mx-auto">
+                    <div class="mt-4 flex justify-center gap-2">
+                         <button data-format="png" data-src="${imageUrl}" class="download-btn-single bg-gray-600 text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-gray-700 transition duration-300">Download PNG</button>
+                         <button data-format="jpg" data-src="${imageUrl}" class="download-btn-single bg-gray-600 text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-gray-700 transition duration-300">Download JPG</button>
+                    </div>
+                </div>`;
+        }
+
+        function displayErrorInSlot(containerId, slotIndex, message) {
+            const slotId = `loader-wrapper-${slotIndex}`;
+            const slot = document.getElementById(slotId);
+            if (!slot) return;
+            slot.innerHTML = `<p class="text-red-500 p-4 text-center">${message}</p>`;
+        }
+
+        function displayImage(containerId, imageUrl, prompt, title = '') {
+            const container = document.getElementById(containerId);
+            let titleHtml = '';
+            if (title) {
+                titleHtml = `<p class="text-center font-semibold mt-2 dark:text-gray-200">${title}</p>`;
+            }
+            container.innerHTML = `<div><img src="${imageUrl}" alt="Generated Sticker based on: ${prompt}" class="max-w-full max-h-[400px] h-auto rounded-lg shadow-md mx-auto">${titleHtml}</div>`;
+            const downloadContainer = container.nextElementSibling;
+            if(downloadContainer && downloadContainer.id.includes('-download-options')) {
+                downloadContainer.classList.remove('hidden');
+            }
+        }
+
+        function displayError(containerId, message) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<p class="text-red-500">${message}</p>`;
+            hideDownloadOptions(containerId);
+        }
+        
+        function downloadImage(dataUrl, format, title) {
+            const filename = `${title.replace(/\s+/g, '-').toLowerCase() || 'kaiser-sticker'}.${format}`;
+            if (format === 'png') {
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } else if (format === 'jpg') {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                    const jpgDataUrl = canvas.toDataURL('image/jpeg');
+                    const a = document.createElement('a');
+                    a.href = jpgDataUrl;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                };
+                img.src = dataUrl;
+            }
+        }
+        
+        function getDownloadTitle() {
+            if (state.special.active) {
+                return state.special.title || state.special.character.split(' from ')[0] || 'special-decal';
+            }
+            return state.theme || 'sticker-set';
+        }
+
+        document.body.addEventListener('click', (e) => {
+            if (e.target.classList.contains('download-btn-single')) {
+                const format = e.target.dataset.format;
+                const imageUrl = e.target.dataset.src;
+                if (imageUrl) {
+                    const title = getDownloadTitle();
+                    downloadImage(imageUrl, format, title);
+                }
+                return;
+            }
+
+            if (e.target.classList.contains('download-btn')) {
+                const format = e.target.dataset.format;
+                const outputContainer = e.target.closest('.option-card').querySelector('[id$="-image-output"]');
+                const img = outputContainer.querySelector('img');
+                if (img && img.src) {
+                    const title = getDownloadTitle();
+                    downloadImage(img.src, format, title);
+                }
+            }
+        });
+
+        generateTextBtn.addEventListener('click', async () => {
+            const userPrompt = textPromptInput.value;
+            if (!userPrompt) return;
+
+            showLoaders('text-image-output', state.sheetCount);
+            generateTextBtn.disabled = true;
+            generateTextBtn.textContent = 'Generating...';
+
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{
+                    parts: [{ text: userPrompt }]
+                }],
+                generationConfig: {
+                    responseModalities: ['IMAGE']
+                },
+            };
+
+            const generationPromises = [];
+            for (let i = 0; i < state.sheetCount; i++) {
+                const promise = fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(result => {
+                        const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+                        if (base64Data) {
+                            const imageUrl = `data:image/png;base64,${base64Data}`;
+                            displayImageInSlot('text-image-output', i, imageUrl, userPrompt, getDownloadTitle());
+                        } else {
+                            const blockReason = result?.promptFeedback?.blockReason;
+                            if (blockReason) {
+                                throw new Error(`Image generation blocked. Reason: ${blockReason}`);
+                            }
+                            throw new Error('No image data found in response.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`Error generating image ${i + 1}:`, error);
+                        displayErrorInSlot('text-image-output', i, 'Sorry, something went wrong with this one.');
+                    });
+                generationPromises.push(promise);
+            }
+
+            await Promise.allSettled(generationPromises);
+            
+            generateTextBtn.disabled = false;
+            generateTextBtn.textContent = 'Generate Sticker Sheet';
+        });
+
+        generateImageBtn.addEventListener('click', async () => {
+            const file = imageUploadInput.files[0];
+            if (!file) { return; }
+
+            let prompt = '';
+            if(state.special.active) {
+                if (!state.special.character) {
+                    displayError('image-image-output', 'Please select a character for the special request.');
+                    return;
+                }
+                prompt = `Transform the uploaded image into a wide anime-style motorcycle sticker, featuring ${state.special.character}. The art style should have bold, graphic elements, with the character in this pose: ${state.special.scene}. The entire composition must use a cohesive stark, binary color palette of ${state.special.colors.one} and ${state.special.colors.two}. Simplify the uploaded image into this graphic style, give it a thick die-cut border, and prepare it for a vehicle decal.`;
+            } else {
+                 if (!state.style || !state.theme || !state.color) {
+                    displayError('image-image-output', 'Please select a Theme, Art Style, and Color from the regular options.');
+                    return;
+                }
+                prompt = `Transform the uploaded image into a ${state.style} sticker. Make it a simplified graphic illustration with bold outlines, die-cut with a thick white border, and ready to be printed. Apply a ${state.theme} aesthetic with a ${state.color} color scheme.`;
+            }
+            
+            showLoader('image-image-output');
+            generateImageBtn.disabled = true;
+            generateImageBtn.textContent = 'Generating...';
+
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onloadend = async () => {
+                const base64ImageData = reader.result.split(',')[1];
+                
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
+                
+                const payload = {
+                    contents: [{
+                        parts: [
+                            { text: prompt },
+                            { inlineData: { mimeType: file.type, data: base64ImageData } }
+                        ]
+                    }],
+                     generationConfig: { responseModalities: ['IMAGE'] },
+                };
+                
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+                    const result = await response.json();
+                    const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+                    
+                    if (base64Data) {
+                         const imageUrl = `data:image/png;base64,${base64Data}`;
+                         displayImage('image-image-output', imageUrl, "Image-to-image sticker", getDownloadTitle());
+                    } else {
+                        throw new Error('Image data not found in API response.');
+                    }
+                } catch (error) {
+                    console.error('Error in Image-to-Image generation:', error);
+                    displayError('image-image-output', 'Failed to generate sticker. Please try again.');
+                } finally {
+                     generateImageBtn.disabled = false;
+                     generateImageBtn.textContent = 'Generate Sticker from Image';
+                }
+            };
+            reader.onerror = (error) => {
+                console.error('Error reading file:', error);
+                displayError('image-image-output', 'Could not read the uploaded file.');
+                generateImageBtn.disabled = false;
+                generateImageBtn.textContent = 'Generate Sticker from Image';
+            };
+        });
+
+    });
+</script>
+
 </body>
 </html>
+
+
+
+
