@@ -6,10 +6,6 @@
     <title>Kaiser Sticker Set Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Creative Pastel -->
-    <!-- Application Structure Plan: The application is structured as a guided, multi-step tool. It begins with the 'Prompt Builder,' where users select options from categories defined in the source report (Theme, Style, etc.). Selections dynamically update the 'Generated Prompt' section in real-time. This prompt can then be used in the 'Text-to-Image Generator' or users can switch to the 'Image-to-Image' tool. This task-oriented flow was chosen because it directly mirrors the user's goal: to first construct a creative prompt and then immediately use it, providing an intuitive and efficient workflow from concept to generation. -->
-    <!-- Visualization & Content Choices: Report Info: Themes, Art Styles, Subjects, Palettes -> Goal: Allow user selection to build a text prompt -> Viz/Presentation Method: Interactive button groups within card-based sections (HTML/Tailwind) -> Interaction: On-click selection updates a central state object, which triggers a function to regenerate and display the final text prompt and pre-fill the generator input. Justification: Buttons are more visual and direct than dropdowns for this creative task. Real-time prompt updates provide immediate feedback, making the creation process transparent and engaging. Library/Method: Vanilla JavaScript for state and DOM manipulation. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -129,14 +125,12 @@
         </header>
 
         <main>
-            <!-- Prompt Builder Section -->
             <section id="prompt-builder" class="mb-12">
                 <h2 class="text-2xl font-bold mb-2 text-center dark:text-gray-100">1. Prompt Builder</h2>
                 <p class="text-center text-gray-500 dark:text-gray-400 mb-8">Select options below or switch to a Special Request.</p>
 
                 <div id="regular-options-container" class="space-y-8 transition-opacity duration-300">
-                    <!-- Theme Selection -->
-                    <div class="option-card bg-white dark:bg-gray-800">
+                    <div class="option-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-[#f0e2de] dark:border-gray-800">
                         <h3 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">🌸 Theme</h3>
                         <div id="theme-options" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                             <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="theme" data-value="Pink Aesthetic">Pink Aesthetic</button>
@@ -155,8 +149,7 @@
                         </div>
                     </div>
 
-                    <!-- Art Style Selection -->
-                    <div class="option-card bg-white dark:bg-gray-800">
+                    <div class="option-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-[#f0e2de] dark:border-gray-800">
                         <h3 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">🎨 Art Style</h3>
                         <div id="style-options" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
                             <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="style" data-value="Vector Illustration">Vector Illustration</button>
@@ -171,11 +164,11 @@
                             <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="style" data-value="Claymation Style">Claymation</button>
                         </div>
                     </div>
-                     <!-- Subject Selection -->
-                    <div class="option-card bg-white dark:bg-gray-800">
+
+                    <div class="option-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-[#f0e2de] dark:border-gray-800">
                         <h3 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">🧸 Subjects & Objects</h3>
                         <div id="subject-options" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                           <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Cute Animals like a panda, cat, butterfly, sloth, and corgi dog">Cute Animals</button>
+                            <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Cute Animals like a panda, cat, butterfly, sloth, and corgi dog">Cute Animals</button>
                             <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Food & Drink with Faces like a happy pineapple, dripping pizza, smiling coffee cup, and a cheerful taco">Food & Drink</button>
                             <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Artsy objects like 'The Great Wave' painting, flowers in mason jars, a Greek statue, and paint palettes">Artsy</button>
                             <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Nature objects like flowers, rainbows, stars, potted succulents, and mushrooms">Nature Objects</button>
@@ -193,8 +186,8 @@
                             <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="subject" data-value="Studio Ghibli characters like Totoro, Catbus, No-Face from Spirited Away, and Calcifer from Howl's Moving Castle">Studio Ghibli</button>
                         </div>
                     </div>
-                    <!-- Color Palette Selection -->
-                    <div class="option-card bg-white dark:bg-gray-800" id="color-palette-card">
+
+                    <div class="option-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-[#f0e2de] dark:border-gray-800" id="color-palette-card">
                         <h3 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">🌈 Color Palette</h3>
                         <div id="color-options" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
                             <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="color" data-value="Pastel Pinks & Peaches">Pastel Pinks</button>
@@ -208,8 +201,8 @@
                             <button class="option-btn p-3 rounded-lg font-medium border border-[#f0e2de] dark:border-gray-700 hover:bg-[#fbebeb] dark:hover:bg-gray-700" data-category="color" data-value="Synthwave Sunset">Synthwave Sunset</button>
                         </div>
                     </div>
-                    <!-- Output Options -->
-                    <div class="option-card bg-white dark:bg-gray-800">
+
+                    <div class="option-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-[#f0e2de] dark:border-gray-800">
                         <h3 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">⚙️ Output Options</h3>
                         <div class="flex items-center justify-between pb-6 border-b border-gray-200 dark:border-gray-700">
                             <label for="no-text-toggle" class="flex flex-col cursor-pointer pr-4">
@@ -223,8 +216,7 @@
                                 </div>
                             </label>
                         </div>
-                         <!-- Number of Sheets Selection -->
-                        <div class="flex items-center justify-between pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+                         <div class="flex items-center justify-between pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
                             <label class="flex flex-col pr-4">
                                 <span class="font-medium text-gray-700 dark:text-gray-300">Number of Sheets</span>
                                 <span class="text-sm text-gray-500 dark:text-gray-400">Choose how many variations to generate.</span>
@@ -246,9 +238,9 @@
                         </div>
                     </div>
                 </div>
-                 <!-- Special Requests -->
-                <div class="mt-8">
-                    <div class="option-card bg-white dark:bg-gray-800">
+
+                 <div class="mt-8">
+                    <div class="option-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-[#f0e2de] dark:border-gray-800">
                         <button id="special-request-toggle" class="w-full text-left">
                             <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-200">⭐ Special Request: Anime Motorcycle Decal</h3>
                              <p class="text-sm text-gray-500 dark:text-gray-400">Click to activate and customize a high-octane anime sticker.</p>
@@ -311,10 +303,9 @@
                 </div>
             </section>
             
-            <!-- Generated Prompt Section -->
             <section id="prompt-output" class="mb-12">
                 <h2 class="text-2xl font-bold mb-4 text-center dark:text-gray-100">2. Your Generated Prompt</h2>
-                 <div class="option-card bg-white dark:bg-gray-800">
+                 <div class="option-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-[#f0e2de] dark:border-gray-800">
                     <textarea id="generatedPrompt" rows="5" class="w-full p-4 rounded-md text-gray-700 bg-[#fff0f3] dark:bg-gray-700 dark:text-gray-200 border-l-4 border-[#ff8fab] dark:border-pink-500 min-h-[120px] text-center italic focus:ring-2 focus:ring-[#ff8fab] dark:focus:ring-pink-500 focus:border-transparent resize-y" placeholder="Your prompt will appear here once you make selections..."></textarea>
                     <div class="flex justify-center mt-4">
                         <button id="copy-btn" class="bg-[#ff8fab] dark:bg-pink-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-[#fb7299] dark:hover:bg-pink-700 transition duration-300 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>
@@ -324,15 +315,13 @@
                  </div>
             </section>
 
-             <!-- Generator Tabs -->
-            <div class="mb-8 flex justify-center border-b border-gray-200 dark:border-gray-700">
+             <div class="mb-8 flex justify-center border-b border-gray-200 dark:border-gray-700">
                 <button id="tab-text2image" class="py-4 px-6 block hover:text-[#ff8fab] dark:hover:text-pink-400 focus:outline-none text-[#ff8fab] dark:text-pink-400 border-b-2 font-medium border-[#ff8fab] dark:border-pink-400">Text-to-Image</button>
                 <button id="tab-image2image" class="py-4 px-6 block hover:text-[#ff8fab] dark:hover:text-pink-400 focus:outline-none text-gray-500 dark:text-gray-400 font-medium">Image-to-Image</button>
             </div>
 
-            <!-- Text-to-Image Generator -->
             <section id="text-to-image-generator">
-                 <div class="option-card text-center bg-white dark:bg-gray-800">
+                 <div class="option-card text-center bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-[#f0e2de] dark:border-gray-800">
                     <h2 class="text-2xl font-bold mb-2 dark:text-gray-100">3. Text-to-Image Generator</h2>
                     <p class="text-gray-500 dark:text-gray-400 mb-6">Use your prompt to generate a sticker sheet!</p>
                     <div class="max-w-2xl mx-auto">
@@ -347,9 +336,8 @@
                  </div>
             </section>
 
-            <!-- Image-to-Image Generator -->
             <section id="image-to-image-generator" class="hidden">
-                 <div class="option-card text-center bg-white dark:bg-gray-800">
+                 <div class="option-card text-center bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-[#f0e2de] dark:border-gray-800">
                     <h2 class="text-2xl font-bold mb-2 dark:text-gray-100">3. Image-to-Image Sticker Maker</h2>
                     <p class="text-gray-500 dark:text-gray-400 mb-6">Upload an image and turn it into a sticker!</p>
                     <div class="max-w-2xl mx-auto">
@@ -364,8 +352,9 @@
                     </div>
                     <div id="image-download-options" class="hidden mt-4 flex justify-center gap-4">
                         <button data-format="png" class="download-btn bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition duration-300">Download PNG</button>
-                <button data-format="jpg" class="download-btn bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition duration-300">Download JPG</button>
-            </div>
+                        <button data-format="jpg" class="download-btn bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition duration-300">Download JPG</button>
+                    </div>
+                 </div>
         </section>
     </main>
 </div>
@@ -434,6 +423,7 @@
         const diceRollBtn = document.getElementById('dice-roll');
         const sceneActionText = document.getElementById('scene-action-text');
 
+        const apiKey = "AQ.Ab8RN6I0AY6h7YXrXMif5ET1Wzlf7YlFmSJstOWRfrMS823DBQ";
 
         // Theme handling
         const applyTheme = (theme) => {
@@ -704,6 +694,7 @@
             if (title) {
                 titleHtml = `<p class="text-center font-semibold mt-2 dark:text-gray-200">${title}</p>`;
             }
+            container.className = 'mt-8 min-h-[300px] bg-gray-50 dark:bg-gray-900/50 rounded-lg flex items-center justify-center border border-dashed dark:border-gray-700 p-4';
             container.innerHTML = `<div><img src="${imageUrl}" alt="Generated Sticker based on: ${prompt}" class="max-w-full max-h-[400px] h-auto rounded-lg shadow-md mx-auto">${titleHtml}</div>`;
             const downloadContainer = container.nextElementSibling;
             if(downloadContainer && downloadContainer.id.includes('-download-options')) {
@@ -785,7 +776,6 @@
             generateTextBtn.disabled = true;
             generateTextBtn.textContent = 'Generating...';
 
-            const apiKey = "AQ.Ab8RN6I0AY6h7YXrXMif5ET1Wzlf7YlFmSJstOWRfrMS823DBQ";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
             const payload = {
                 contents: [{
@@ -854,7 +844,8 @@
                 prompt = `Transform the uploaded image into a ${state.style} sticker. Make it a simplified graphic illustration with bold outlines, die-cut with a thick white border, and ready to be printed. Apply a ${state.theme} aesthetic with a ${state.color} color scheme.`;
             }
             
-            showLoader('image-image-output');
+            // Fixed showLoaders call here to match the existing declaration
+            showLoaders('image-image-output', 1);
             generateImageBtn.disabled = true;
             generateImageBtn.textContent = 'Generating...';
 
@@ -862,8 +853,6 @@
             reader.readAsDataURL(file);
             reader.onloadend = async () => {
                 const base64ImageData = reader.result.split(',')[1];
-                
-                const apiKey = "";
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
                 
                 const payload = {
@@ -915,7 +904,3 @@
 
 </body>
 </html>
-
-
-
-
